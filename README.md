@@ -85,4 +85,4 @@ Open `http://localhost:3000`, sign in with Google, and the tiles will load from 
 - Visualization concept inspired by three.js CSS3D Periodic Table example.
 
 # Link to the web app
-https://github.com/7ahin/Periodic-Table-Demo.git
+](https://periodic-table-demo.vercel.app/)
