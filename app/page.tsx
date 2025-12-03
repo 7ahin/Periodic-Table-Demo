@@ -122,6 +122,15 @@ export default function Page() {
       if (v >= 200000) bg = '#66cc66'
       else if (v >= 100000) bg = '#ffb84d'
       el.style.background = bg
+      function hexToRgb(h: string) {
+        const s = h.replace('#','')
+        const n = parseInt(s, 16)
+        if (s.length === 6) return { r: (n>>16)&255, g: (n>>8)&255, b: n&255 }
+        return { r: 255, g: 255, b: 255 }
+      }
+      const rgb = hexToRgb(bg)
+      const glow = `rgba(${rgb.r},${rgb.g},${rgb.b},0.6)`
+      el.style.setProperty('--glow', glow)
       el.style.width = tileW + 'px'
       el.style.height = tileH + 'px'
       el.innerHTML = `
@@ -240,7 +249,11 @@ export default function Page() {
     if (!CLIENT_ID) { alert('Missing NEXT_PUBLIC_GOOGLE_CLIENT_ID'); return }
     if (!tokenClient) initTokenClient()
     if (!tokenClient) { alert('Google Identity not ready'); return }
-    tokenClient.requestAccessToken()
+    try {
+      tokenClient.requestAccessToken({ prompt: 'consent' })
+    } catch {
+      alert('Login popup blocked. Allow pop-ups and third-party cookies, or try a different browser.')
+    }
   }
 
   useEffect(() => {
@@ -249,11 +262,11 @@ export default function Page() {
 
   return (
     <>
-      <Script src="https://accounts.google.com/gsi/client" strategy="lazyOnload" onLoad={() => {}} />
+      <Script src="https://accounts.google.com/gsi/client" strategy="lazyOnload" onLoad={() => { initTokenClient() }} />
       {!authed && (
         <div className="overlay">
           <div className="card">
-            <h1>Welcome Back</h1>
+            <h1>Welcome!</h1>
             <p>Sign in to load your data visualization</p>
             <button className="googleBtn" onClick={requestAccessToken} aria-label="Sign in with Google">
               <span className="googleLogo">
