@@ -1,6 +1,3 @@
-# Link to the web app
-https://github.com/7ahin/Periodic-Table-Demo.git
-
 # Periodic Data Table (Next.js + three.js CSS3D)
 
 A modern, interactive data visualization inspired by the three.js CSS3D Periodic Table demo. It authenticates with Google, reads a dataset from Google Sheets, and renders animated CSS3D tiles in multiple arrangements.
@@ -86,3 +83,6 @@ Open `http://localhost:3000`, sign in with Google, and the tiles will load from 
 
 ## Attribution
 - Visualization concept inspired by three.js CSS3D Periodic Table example.
+
+# Link to the web app
+https://github.com/7ahin/Periodic-Table-Demo.git
