@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import * as THREE from 'three'
 import { CSS3DRenderer, CSS3DObject } from 'three/examples/jsm/renderers/CSS3DRenderer.js'
 import { Easing, Tween, update as tweenUpdate } from '@tweenjs/tween.js'
@@ -11,6 +11,7 @@ export default function Page() {
   const stateRef = useRef<{ camera: THREE.PerspectiveCamera, scene: THREE.Scene, renderer: CSS3DRenderer, objects: THREE.Object3D[], targets: Record<string, THREE.Object3D[]> } | null>(null)
   const [authed, setAuthed] = useState(false)
   const [view, setView] = useState<'table'|'sphere'|'helix'|'grid'>('table')
+  const viewRef = useRef(view)
   const [selected, setSelected] = useState<{ id:string; name:string; company:string; networthVal:number; networth?:string } | null>(null)
   const CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID as string
   const SPREADSHEET_ID = process.env.NEXT_PUBLIC_SPREADSHEET_ID as string
@@ -19,10 +20,15 @@ export default function Page() {
   let accessToken: string | null = null
   let tokenClient: google.accounts.oauth2.TokenClient | null = null
 
-  function initThree() {
+  
+
+  const initThree = useCallback(() => {
     const container = containerRef.current!
     const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 1, 10000)
-    camera.position.z = 3000
+    {
+      const base = Math.min(window.innerWidth, window.innerHeight)
+      camera.position.z = Math.max(2400, Math.min(3600, base * 4))
+    }
     const scene = new THREE.Scene()
     const renderer = new CSS3DRenderer()
     renderer.setSize(window.innerWidth, window.innerHeight)
@@ -30,22 +36,88 @@ export default function Page() {
     container.innerHTML = ''
     container.appendChild(renderer.domElement)
     stateRef.current = { camera, scene, renderer, objects: [], targets: { table: [], sphere: [], helix: [], grid: [] } }
-    window.addEventListener('resize', () => {
+    const handleResize = () => {
       camera.aspect = window.innerWidth / window.innerHeight
       camera.updateProjectionMatrix()
       renderer.setSize(window.innerWidth, window.innerHeight)
-    })
-  }
+      const base = Math.min(window.innerWidth, window.innerHeight)
+      camera.position.z = Math.max(2400, Math.min(3600, base * 4))
+      const s = stateRef.current!
+      let tileW = cssPxVar('--tile-w'), tileH = cssPxVar('--tile-h')
+      if (!tileW || !tileH) { tileW = 140; tileH = 160 }
+      const total = s.objects.length
+      const viewportMin = Math.min(window.innerWidth, window.innerHeight)
+      s.targets = { table: [], sphere: [], helix: [], grid: [] }
+      for (let i = 0; i < total; i++) {
+        const x = (i % 20) * (tileW + 20) - (20 * (tileW + 20) / 2)
+        const y = (Math.floor(i / 20) % 10) * (tileH + 20) - (10 * (tileH + 20) / 2)
+        const t = new THREE.Object3D()
+        t.position.set(x, -y, 0)
+        s.targets.table.push(t)
+
+        const phi = Math.acos(-1 + (2 * i) / total)
+        const theta = Math.sqrt(total * Math.PI) * phi
+        const desktop = window.innerWidth >= 1024
+        const r = desktop ? Math.min(1000, viewportMin * 0.95) : Math.max(420, Math.min(900, viewportMin * 0.7))
+        const sObj = new THREE.Object3D()
+        sObj.position.set(
+          r * Math.cos(theta) * Math.sin(phi),
+          r * Math.sin(theta) * Math.sin(phi),
+          r * Math.cos(phi)
+        )
+        sObj.lookAt(new THREE.Vector3(0,0,0))
+        s.targets.sphere.push(sObj)
+
+        const helixRadius = Math.max(420, Math.min(650, viewportMin * 0.6))
+        const helixTurns = 8
+        const tFactor = i / total
+        const angle = tFactor * Math.PI * 2 * helixTurns
+        const strand = i % 2 === 0 ? 1 : -1
+        const helixX = helixRadius * Math.cos(angle) * 0.8
+        const helixZ = helixRadius * Math.sin(angle) * 0.8
+        const helixObj = new THREE.Object3D()
+        helixObj.position.set(strand * helixX, (i - total/2) * 12, strand * helixZ)
+        helixObj.lookAt(new THREE.Vector3(0, (i - total/2) * 12, 0))
+        s.targets.helix.push(helixObj)
+
+        const gx = 5, gy = 4, gz = 10
+        const ix = i % gx
+        const iy = Math.floor(i / gx) % gy
+        const iz = Math.floor(i / (gx * gy)) % gz
+        const spacingX = tileW + 40
+        const spacingY = tileH + 40
+        const spacingZ = 420
+        const gridObj = new THREE.Object3D()
+        gridObj.position.set(
+          (ix - (gx - 1) / 2) * spacingX,
+          (iy - (gy - 1) / 2) * spacingY,
+          (iz - (gz - 1) / 2) * spacingZ
+        )
+        s.targets.grid.push(gridObj)
+      }
+      const currentView = viewRef.current || 'table'
+      transform(s.targets[currentView], 600)
+    }
+    window.addEventListener('resize', handleResize)
+  }, [])
 
   async function fetchSheet() {
+    if (!SPREADSHEET_ID) { alert('Missing NEXT_PUBLIC_SPREADSHEET_ID'); return }
     const base = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/`
-    const bare = RANGE.split('!')[0]
-    const candidates = [RANGE, `${bare}!A1:Z1000`, bare, 'A1:Z1000']
+    const bare = (RANGE || '').split('!')[0].trim()
+    const candidates = [] as string[]
+    if (RANGE && RANGE.trim()) candidates.push(RANGE.trim())
+    if (bare) {
+      candidates.push(`${bare}!A1:Z1000`, `${bare}!A1:Z`, bare)
+    }
+    candidates.push('A1:Z1000', 'A1:Z')
     let rows: string[][] | null = null
     let lastStatus = 0
     let lastText = ''
+    let lastUrl = ''
     for (const r of candidates) {
-      const url = base + encodeURIComponent(r) + '?majorDimension=ROWS'
+      const url = base + encodeURIComponent(r) + '?majorDimension=ROWS&valueRenderOption=UNFORMATTED_VALUE'
+      lastUrl = url
       const res = await fetch(url, { headers: { Authorization: 'Bearer ' + accessToken } })
       if (res.ok) {
         const obj = await res.json()
@@ -57,8 +129,44 @@ export default function Page() {
       }
     }
     if (!rows) {
-      alert('Sheets API error: ' + lastStatus + '\n' + lastText)
-      return
+      let message = lastText
+      try {
+        const j = JSON.parse(lastText)
+        if (j && j.error && j.error.message) message = j.error.message
+      } catch {}
+      if (lastStatus === 400) {
+        const metaUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}?fields=sheets.properties.title`
+        const metaRes = await fetch(metaUrl, { headers: { Authorization: 'Bearer ' + accessToken } })
+        if (metaRes.ok) {
+          type SheetMeta = { sheets?: { properties?: { title?: string } }[] }
+          const meta: SheetMeta = await metaRes.json()
+          const titles: string[] = (meta.sheets ?? [])
+            .map(s => s.properties?.title || '')
+            .filter((t): t is string => typeof t === 'string' && t.length > 0)
+          const fallbackTitle = titles.includes(bare) ? bare : (titles.includes('Sheet1') ? 'Sheet1' : (titles[0] || ''))
+          if (fallbackTitle) {
+            const url = base + encodeURIComponent(`${fallbackTitle}!A1:Z1000`) + '?majorDimension=ROWS&valueRenderOption=UNFORMATTED_VALUE'
+            lastUrl = url
+            const res2 = await fetch(url, { headers: { Authorization: 'Bearer ' + accessToken } })
+            if (res2.ok) {
+              const obj2 = await res2.json()
+              rows = (obj2.values || []) as string[][]
+            } else {
+              lastStatus = res2.status
+              lastText = await res2.text()
+              message = lastText
+              try {
+                const j2 = JSON.parse(lastText)
+                if (j2 && j2.error && j2.error.message) message = j2.error.message
+              } catch {}
+            }
+          }
+        }
+      }
+      if (!rows) {
+        alert('Sheets API error ' + lastStatus + ': ' + message + '\nURL: ' + lastUrl)
+        return
+      }
     }
     const data = parseRows(rows)
     buildScene(data)
@@ -104,14 +212,21 @@ export default function Page() {
     return out
   }
 
+  function cssPxVar(name: string) {
+    const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim()
+    return parseFloat(v.replace('px','')) || 0
+  }
+
   function buildScene(data: { id: string; name: string; company: string; networthVal: number }[]) {
     const s = stateRef.current!
     s.objects = []
     s.targets = { table: [], sphere: [], helix: [], grid: [] }
-    const tileW = 140, tileH = 160
+    let tileW = cssPxVar('--tile-w'), tileH = cssPxVar('--tile-h')
+    if (!tileW || !tileH) { tileW = 140; tileH = 160 }
     const total = Math.max(200, data.length)
     const padded = [...data]
     while (padded.length < total) padded.push({ id: '', name: '', company: '', networthVal: 0 })
+    const viewportMin = Math.min(window.innerWidth, window.innerHeight)
 
     for (let i = 0; i < total; i++) {
       const d = padded[i]
@@ -131,13 +246,13 @@ export default function Page() {
       const rgb = hexToRgb(bg)
       const glow = `rgba(${rgb.r},${rgb.g},${rgb.b},0.6)`
       el.style.setProperty('--glow', glow)
-      el.style.width = tileW + 'px'
-      el.style.height = tileH + 'px'
       el.innerHTML = `
-        <div class="rank">${d.id || i + 1}</div>
-        <div class="title">${d.name || '—'}</div>
-        <div class="company">${d.company || ''}</div>
-        <div class="worth">${d.networthVal ? ('$' + Number(d.networthVal).toLocaleString()) : ''}</div>
+        <div class="tile">
+          <div class="rank">${d.id || i + 1}</div>
+          <div class="title">${d.name || '—'}</div>
+          <div class="company">${d.company || ''}</div>
+          <div class="worth">${d.networthVal ? ('$' + Number(d.networthVal).toLocaleString()) : ''}</div>
+        </div>
       `
       el.style.cursor = 'pointer'
       el.addEventListener('click', () => {
@@ -159,7 +274,8 @@ export default function Page() {
       const total = padded.length
       const phi = Math.acos(-1 + (2 * i) / total)
       const theta = Math.sqrt(total * Math.PI) * phi
-      const r = 900
+      const desktop = window.innerWidth >= 1024
+      const r = desktop ? Math.min(1000, viewportMin * 0.95) : Math.max(420, Math.min(900, viewportMin * 0.7))
       const sObj = new THREE.Object3D()
       sObj.position.set(
         r * Math.cos(theta) * Math.sin(phi),
@@ -169,7 +285,7 @@ export default function Page() {
       sObj.lookAt(new THREE.Vector3(0,0,0))
       s.targets.sphere.push(sObj)
 
-      const helixRadius = 650
+      const helixRadius = Math.max(420, Math.min(650, viewportMin * 0.6))
       const helixTurns = 8
       const tFactor = i / total
       const angle = tFactor * Math.PI * 2 * helixTurns
@@ -227,6 +343,8 @@ export default function Page() {
     loop()
   }
 
+  
+
   function initTokenClient() {
     if (typeof window === 'undefined' || !('google' in window)) { alert('Google Identity library not loaded'); return }
     tokenClient = google.accounts.oauth2.initTokenClient({
@@ -258,7 +376,11 @@ export default function Page() {
 
   useEffect(() => {
     initThree()
-  }, [])
+  }, [initThree])
+
+  useEffect(() => {
+    viewRef.current = view
+  }, [view])
 
   return (
     <>
@@ -285,12 +407,12 @@ export default function Page() {
       <div ref={containerRef} style={{ width: '100vw', height: '100vh', position: 'relative' }} />
       {authed && (
         <>
-          <div className="menu">
+      <div className="menu">
             <button onClick={() => { transform(stateRef.current!.targets.table, 1200); setView('table') }}>Table</button>
             <button onClick={() => { transform(stateRef.current!.targets.sphere, 1200); setView('sphere') }}>Sphere</button>
             <button onClick={() => { transform(stateRef.current!.targets.helix, 1300); setView('helix') }}>Helix</button>
             <button onClick={() => { transform(stateRef.current!.targets.grid, 1200); setView('grid') }}>Grid</button>
-          </div>
+      </div>
           <div className="hud">{view === 'table' ? 'Table 20×10' : view === 'sphere' ? 'Sphere' : view === 'helix' ? 'Double Helix' : 'Grid 5×4×10'}</div>
           <div className="legend">
             <div>Net Worth</div>

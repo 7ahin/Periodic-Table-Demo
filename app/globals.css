@@ -1,6 +1,7 @@
 * { box-sizing: border-box; }
+:root { --tile-w: 140px; --tile-h: 160px; }
 body { margin: 0; font-family: Inter, Arial, sans-serif; background: linear-gradient(180deg,#0b1020,#0b1a2a); color: #e6eef7; height: 100vh; overflow: hidden; }
-.element { width: 140px; height: 160px; padding: 0; border-radius: 8px; box-shadow: 0 8px 20px rgba(0,0,0,0.35); color:#e6eef7; font-family: Inter, Arial, sans-serif; background:#0e2f3e; border:1px solid rgba(255,255,255,0.08); will-change: transform; position: relative; }
+.element { width: var(--tile-w); height: var(--tile-h); padding: 0; border-radius: 8px; box-shadow: 0 8px 20px rgba(0,0,0,0.35); color:#e6eef7; font-family: Inter, Arial, sans-serif; background:#0e2f3e; border:1px solid rgba(255,255,255,0.08); will-change: transform; position: relative; }
 .element:hover { animation: none; z-index: 200; }
 .element .tile { position:absolute; inset:0; padding:10px; border-radius:8px; background: inherit; transform: translateZ(0); transform-origin: 50% 40%; will-change: transform; }
 .element:hover .tile { animation: none; transform: translateY(-12px) scale(1.1); }
@@ -12,7 +13,7 @@ body { margin: 0; font-family: Inter, Arial, sans-serif; background: linear-grad
 .element::after { content: ""; position: absolute; inset: 0; border-radius: 8px; border: 3px solid var(--glow, rgba(255,255,255,0.45)); box-shadow: 0 0 18px var(--glow); opacity: 0; transition: opacity .14s ease, box-shadow .14s ease; pointer-events: none; }
 .element:hover::after { opacity: 1; box-shadow: 0 0 40px var(--glow); }
 
-.element::before { content: ""; position: absolute; inset: 0; border-radius: 8px; background: radial-gradient(140px circle at 50% 45%, var(--glow) 0%, rgba(0,0,0,0) 65%); opacity: 0; transition: opacity .14s ease; pointer-events: none; }
+.element::before { content: ""; position: absolute; inset: 0; border-radius: 8px; background: radial-gradient(var(--tile-w) circle at 50% 45%, var(--glow) 0%, rgba(0,0,0,0) 65%); opacity: 0; transition: opacity .14s ease; pointer-events: none; }
 .element:hover::before { opacity: .6; }
 
 .element { position: relative; }
@@ -26,15 +27,15 @@ body { margin: 0; font-family: Inter, Arial, sans-serif; background: linear-grad
 .googleBtn:active { transform: translateY(0); }
 .googleLogo { width: 20px; height: 20px; display: inline-block; }
 
-.menu { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); display:flex; gap:10px; z-index: 15; }
+.menu { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); display:flex; gap:10px; z-index: 1000; }
 .menu button { padding:8px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.12); background:#142641; color:#e6eef7; cursor:pointer; }
 .menu button:hover { background:#1a3152; }
-.legend { position: fixed; right: 24px; bottom: 24px; width: 180px; padding: 12px; border-radius: 12px; background:#0e1624; box-shadow: 0 8px 20px rgba(0,0,0,0.35); color:#e6eef7; z-index:15; }
+.legend { position: fixed; right: 24px; bottom: 24px; width: 180px; padding: 12px; border-radius: 12px; background:#0e1624; box-shadow: 0 8px 20px rgba(0,0,0,0.35); color:#e6eef7; z-index:1000; }
 .legend .bar { height: 8px; border-radius: 6px; background: linear-gradient(90deg,#ef3d22,#fdca36,#3a9f48); margin-top:8px; }
 .legend .labels { display:flex; justify-content:space-between; font-size:12px; opacity:0.9; margin-top:6px; }
 
 .detail { position: fixed; inset: 0; display:flex; align-items:center; justify-content:center; z-index: 25; animation: fadeIn 200ms ease-out; }
-.detail .card { background: linear-gradient(180deg,#111a2a,#0e1624); color:#e6eef7; border-radius:18px; box-shadow:0 18px 40px rgba(0,0,0,0.45); padding:28px; width:460px; border:1px solid rgba(255,255,255,0.08); transform-origin: center; animation: pop 220ms ease-out; }
+.detail .card { background: linear-gradient(180deg,#111a2a,#0e1624); color:#e6eef7; border-radius:18px; box-shadow:0 18px 40px rgba(0,0,0,0.45); padding:28px; width:min(460px,92vw); border:1px solid rgba(255,255,255,0.08); transform-origin: center; animation: pop 220ms ease-out; }
 .detail .row { display:flex; justify-content:space-between; margin-top:8px; }
 .detail .close { position:absolute; top:16px; right:16px; background:#142641; color:#e6eef7; border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:8px 12px; cursor:pointer; }
 
@@ -52,4 +53,44 @@ body { margin: 0; font-family: Inter, Arial, sans-serif; background: linear-grad
   100% { transform: translateY(-4px) scale(1.02) rotate(2deg) }
 }
 
-.hud { position: fixed; top: 18px; left: 50%; transform: translateX(-50%); z-index: 15; background: rgba(20,38,65,0.7); backdrop-filter: blur(6px); color:#e6eef7; border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:8px 14px; box-shadow:0 8px 20px rgba(0,0,0,0.35); font-weight:600; }
+.hud { position: fixed; top: 18px; left: 50%; transform: translateX(-50%); z-index: 1000; background: rgba(20,38,65,0.7); backdrop-filter: blur(6px); color:#e6eef7; border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:8px 14px; box-shadow:0 8px 20px rgba(0,0,0,0.35); font-weight:600; }
+
+@media (max-width: 1024px) {
+  :root { --tile-w: 130px; --tile-h: 150px; }
+}
+
+@media (max-width: 768px) {
+  :root { --tile-w: 120px; --tile-h: 140px; }
+  .menu { bottom: 16px; gap: 8px; flex-wrap: wrap; }
+  .menu button { padding:6px 10px; font-size: 13px; }
+  .legend { right: 16px; bottom: auto; top: 16px; width: 160px; }
+  .hud { top: 12px; font-size: 14px; }
+  .element .title { font-size: 13px; }
+  .element .company, .element .rank { font-size: 12px; }
+  .element .worth { font-size: 13px; }
+  .element:hover .tile { transform: translateY(-9px) scale(1.08); }
+}
+
+@media (max-width: 640px) {
+  :root { --tile-w: 110px; --tile-h: 130px; }
+  .menu { bottom: 12px; gap: 8px; flex-wrap: wrap; }
+  .menu button { padding:6px 10px; font-size: 12px; }
+  .legend { right: 12px; top: 12px; bottom: auto; width: 150px; }
+  .hud { top: 10px; font-size: 13px; }
+  .element .title { font-size: 12px; }
+  .element .company, .element .rank { font-size: 11px; }
+  .element .worth { font-size: 12px; }
+  .detail .card { padding:22px; }
+  .element:hover .tile { transform: translateY(-8px) scale(1.06); }
+}
+
+@media (max-width: 480px) {
+  :root { --tile-w: 100px; --tile-h: 120px; }
+  .menu button { padding:5px 8px; font-size: 11px; }
+  .hud { font-size: 12px; }
+}
+
+@media (max-width: 360px) {
+  :root { --tile-w: 92px; --tile-h: 110px; }
+  .menu button { padding:4px 6px; font-size: 11px; }
+}

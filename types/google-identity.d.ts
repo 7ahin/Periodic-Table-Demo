@@ -7,5 +7,5 @@ declare namespace google.accounts.oauth2 {
 }
 
 declare global {
-  interface Window { google: typeof google }
+  interface Window { google: typeof google; __currentView?: 'table' | 'sphere' | 'helix' | 'grid' }
 }
