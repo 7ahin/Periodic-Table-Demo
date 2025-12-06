@@ -53,20 +53,34 @@ export default function Page() {
       if (!tileW || !tileH) { tileW = 140; tileH = 160 }
       const total = s.objects.length
       const viewportMin = Math.min(window.innerWidth, window.innerHeight)
+      const vw = window.innerWidth, vh = window.innerHeight
+      const hudEl = document.querySelector('.hud') as HTMLElement | null
+      const menuEl = document.querySelector('.menu') as HTMLElement | null
+      const topReserve = hudEl ? hudEl.offsetHeight + 16 : 80
+      const bottomReserve = menuEl ? menuEl.offsetHeight + 16 : 80
+      const edgePadding = (vw <= 768) ? Math.max(16, Math.floor(vw * 0.10)) : 0
+      const availW = Math.max(240, vw - edgePadding * 2)
+      const availH = Math.max(160, vh - topReserve - bottomReserve)
+      const mobile = vw <= 768
+      const desktop = vw >= 1024
+      const tableScale = Math.min(availW / (20 * (tileW + 20)), availH / (10 * (tileH + 20)))
+      const ts = Math.min(1, Math.max(0.32, tableScale))
+      const tsf = mobile ? ts * 0.84 : 1
+      const sphereR = desktop ? Math.min(1000, viewportMin * 0.95) : Math.max(360, Math.min(viewportMin * 0.76, Math.min(availW, availH) * 0.46))
+      const helixYStep = mobile ? Math.max(4, Math.min(8, availH / (total * 0.18))) : 12
+      const gridScale = mobile ? Math.min(0.75, Math.max(0.45, Math.min(availW / (5 * (tileW + 40)), availH / (4 * (tileH + 40))))) : 1
+
       s.targets = { table: [], sphere: [], helix: [], grid: [] }
       for (let i = 0; i < total; i++) {
         const x = (i % 20) * (tileW + 20) - (20 * (tileW + 20) / 2)
         const y = (Math.floor(i / 20) % 10) * (tileH + 20) - (10 * (tileH + 20) / 2)
         const t = new THREE.Object3D()
-        t.position.set(x, -y, 0)
+        t.position.set(x * tsf, -y * tsf, 0)
         s.targets.table.push(t)
 
         const phi = Math.acos(-1 + (2 * i) / total)
         const theta = Math.sqrt(total * Math.PI) * phi
-        const desktop = window.innerWidth >= 1024
-        const r = desktop
-          ? Math.min(1000, viewportMin * 0.95)
-          : Math.max(260, Math.min(640, viewportMin * 0.6))
+        const r = sphereR
         const sObj = new THREE.Object3D()
         sObj.position.set(
           r * Math.cos(theta) * Math.sin(phi),
@@ -76,8 +90,7 @@ export default function Page() {
         sObj.lookAt(new THREE.Vector3(0,0,0))
         s.targets.sphere.push(sObj)
 
-        const mobile = window.innerWidth <= 768
-        const helixRadius = mobile ? Math.max(220, Math.min(340, viewportMin * 0.45)) : Math.max(420, Math.min(650, viewportMin * 0.6))
+        const helixRadius = mobile ? Math.max(240, Math.min(viewportMin * 0.5, availW * 0.38)) : Math.max(420, Math.min(650, viewportMin * 0.6))
         const helixTurns = 8
         const tFactor = i / total
         const angle = tFactor * Math.PI * 2 * helixTurns
@@ -85,17 +98,17 @@ export default function Page() {
         const helixX = helixRadius * Math.cos(angle) * 0.8
         const helixZ = helixRadius * Math.sin(angle) * 0.8
         const helixObj = new THREE.Object3D()
-        helixObj.position.set(strand * helixX, (i - total/2) * 12, strand * helixZ)
-        helixObj.lookAt(new THREE.Vector3(0, (i - total/2) * 12, 0))
+        helixObj.position.set(strand * helixX, (i - total/2) * helixYStep, strand * helixZ)
+        helixObj.lookAt(new THREE.Vector3(0, (i - total/2) * helixYStep, 0))
         s.targets.helix.push(helixObj)
 
         const gx = 5, gy = 4, gz = 10
         const ix = i % gx
         const iy = Math.floor(i / gx) % gy
         const iz = Math.floor(i / (gx * gy)) % gz
-        const spacingX = tileW + 40
-        const spacingY = tileH + 40
-        const spacingZ = mobile ? 260 : 420
+        const spacingX = (tileW + 40) * gridScale
+        const spacingY = (tileH + 40) * gridScale
+        const spacingZ = 420 * gridScale
         const gridObj = new THREE.Object3D()
         gridObj.position.set(
           (ix - (gx - 1) / 2) * spacingX,
@@ -236,6 +249,22 @@ export default function Page() {
     const padded = [...data]
     while (padded.length < total) padded.push({ id: '', name: '', company: '', networthVal: 0 })
     const viewportMin = Math.min(window.innerWidth, window.innerHeight)
+    const vw = window.innerWidth, vh = window.innerHeight
+    const hudEl = document.querySelector('.hud') as HTMLElement | null
+    const menuEl = document.querySelector('.menu') as HTMLElement | null
+    const topReserve = hudEl ? hudEl.offsetHeight + 16 : 80
+    const bottomReserve = menuEl ? menuEl.offsetHeight + 16 : 80
+    const edgePadding = (vw <= 768) ? Math.max(16, Math.floor(vw * 0.10)) : 0
+    const availW = Math.max(240, vw - edgePadding * 2)
+    const availH = Math.max(160, vh - topReserve - bottomReserve)
+    const mobile = vw <= 768
+    const desktop = vw >= 1024
+    const tableScale = Math.min(availW / (20 * (tileW + 20)), availH / (10 * (tileH + 20)))
+    const ts = Math.min(1, Math.max(0.32, tableScale))
+    const tsf = mobile ? ts * 0.84 : 1
+    const sphereR = desktop ? Math.min(1000, viewportMin * 0.95) : Math.max(360, Math.min(viewportMin * 0.76, Math.min(availW, availH) * 0.46))
+    const helixYStep = mobile ? Math.max(4, Math.min(8, availH / (total * 0.18))) : 12
+    const gridScale = mobile ? Math.min(0.75, Math.max(0.45, Math.min(availW / (5 * (tileW + 40)), availH / (4 * (tileH + 40))))) : 1
 
     for (let i = 0; i < total; i++) {
       const d = padded[i]
@@ -277,16 +306,13 @@ export default function Page() {
       const x = (i % 20) * (tileW + 20) - (20 * (tileW + 20) / 2)
       const y = (Math.floor(i / 20) % 10) * (tileH + 20) - (10 * (tileH + 20) / 2)
       const t = new THREE.Object3D()
-      t.position.set(x, -y, 0)
+      t.position.set(x * tsf, -y * tsf, 0)
       s.targets.table.push(t)
 
       const total = padded.length
       const phi = Math.acos(-1 + (2 * i) / total)
       const theta = Math.sqrt(total * Math.PI) * phi
-      const desktop = window.innerWidth >= 1024
-      const r = desktop
-        ? Math.min(1000, viewportMin * 0.95)
-        : Math.max(260, Math.min(640, viewportMin * 0.6))
+      const r = sphereR
       const sObj = new THREE.Object3D()
       sObj.position.set(
         r * Math.cos(theta) * Math.sin(phi),
@@ -296,8 +322,7 @@ export default function Page() {
       sObj.lookAt(new THREE.Vector3(0,0,0))
       s.targets.sphere.push(sObj)
 
-      const mobile = window.innerWidth <= 768
-      const helixRadius = mobile ? Math.max(220, Math.min(340, viewportMin * 0.45)) : Math.max(420, Math.min(650, viewportMin * 0.6))
+      const helixRadius = mobile ? Math.max(240, Math.min(viewportMin * 0.5, availW * 0.38)) : Math.max(420, Math.min(650, viewportMin * 0.6))
       const helixTurns = 8
       const tFactor = i / total
       const angle = tFactor * Math.PI * 2 * helixTurns
@@ -305,17 +330,17 @@ export default function Page() {
       const helixX = helixRadius * Math.cos(angle) * 0.8
       const helixZ = helixRadius * Math.sin(angle) * 0.8
       const helixObj = new THREE.Object3D()
-      helixObj.position.set(strand * helixX, (i - total/2) * 12, strand * helixZ)
-      helixObj.lookAt(new THREE.Vector3(0, (i - total/2) * 12, 0))
+      helixObj.position.set(strand * helixX, (i - total/2) * helixYStep, strand * helixZ)
+      helixObj.lookAt(new THREE.Vector3(0, (i - total/2) * helixYStep, 0))
       s.targets.helix.push(helixObj)
 
       const gx = 5, gy = 4, gz = 10
       const ix = i % gx
       const iy = Math.floor(i / gx) % gy
       const iz = Math.floor(i / (gx * gy)) % gz
-      const spacingX = tileW + 40
-      const spacingY = tileH + 40
-      const spacingZ = mobile ? 260 : 420
+      const spacingX = (tileW + 40) * gridScale
+      const spacingY = (tileH + 40) * gridScale
+      const spacingZ = 420 * gridScale
       const gridObj = new THREE.Object3D()
       gridObj.position.set(
         (ix - (gx - 1) / 2) * spacingX,
