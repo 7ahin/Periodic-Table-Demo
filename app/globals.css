@@ -19,7 +19,7 @@ body { margin: 0; font-family: Inter, Arial, sans-serif; background: linear-grad
 .element { position: relative; }
 
 .overlay { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 20; }
-.card { background: rgba(14,22,36,0.7); backdrop-filter: blur(8px); border-radius: 16px; box-shadow: 0 18px 40px rgba(0,0,0,0.35); padding: 36px; width: 460px; text-align: center; border:1px solid rgba(255,255,255,0.08); animation: fadeIn 240ms ease-out; }
+.card { background: rgba(14,22,36,0.7); backdrop-filter: blur(8px); border-radius: 16px; box-shadow: 0 18px 40px rgba(0,0,0,0.35); padding: 36px; width: min(460px,92vw); text-align: center; border:1px solid rgba(255,255,255,0.08); animation: fadeIn 240ms ease-out; }
 .card h1 { font-size: 24px; margin: 0 0 12px; color:#e6eef7; }
 .card p { margin: 0 24px 24px; color: #a7b0c0; }
 .googleBtn { display: inline-flex; align-items: center; gap: 10px; background: linear-gradient(90deg,#4285F4,#6aa1ff); color: #fff; border: none; padding: 12px 18px; border-radius: 10px; cursor: pointer; box-shadow: 0 10px 22px rgba(66,133,244,0.35); font-weight: 700; letter-spacing: .2px; transition: transform .12s ease, box-shadow .12s ease; }
@@ -61,7 +61,7 @@ body { margin: 0; font-family: Inter, Arial, sans-serif; background: linear-grad
 
 @media (max-width: 768px) {
   :root { --tile-w: 120px; --tile-h: 140px; }
-  .menu { bottom: 16px; gap: 8px; flex-wrap: wrap; }
+  .menu { bottom: 16px; gap: 8px; flex-wrap: nowrap; max-width: 94vw; justify-content: center; }
   .menu button { padding:6px 10px; font-size: 13px; }
   .legend { right: 16px; bottom: auto; top: 16px; width: 160px; }
   .hud { top: 12px; font-size: 14px; }
@@ -69,12 +69,13 @@ body { margin: 0; font-family: Inter, Arial, sans-serif; background: linear-grad
   .element .company, .element .rank { font-size: 12px; }
   .element .worth { font-size: 13px; }
   .element:hover .tile { transform: translateY(-9px) scale(1.08); }
+  .googleBtn { width: 100%; justify-content: center; }
 }
 
 @media (max-width: 640px) {
   :root { --tile-w: 110px; --tile-h: 130px; }
-  .menu { bottom: 12px; gap: 8px; flex-wrap: wrap; }
-  .menu button { padding:6px 10px; font-size: 12px; }
+  .menu { bottom: 12px; gap: 6px; flex-wrap: nowrap; max-width: 94vw; justify-content: center; }
+  .menu button { padding:5px 9px; font-size: 12px; }
   .legend { right: 12px; top: 12px; bottom: auto; width: 150px; }
   .hud { top: 10px; font-size: 13px; }
   .element .title { font-size: 12px; }
@@ -82,15 +83,19 @@ body { margin: 0; font-family: Inter, Arial, sans-serif; background: linear-grad
   .element .worth { font-size: 12px; }
   .detail .card { padding:22px; }
   .element:hover .tile { transform: translateY(-8px) scale(1.06); }
+  .googleBtn { width: 100%; justify-content: center; }
 }
 
 @media (max-width: 480px) {
   :root { --tile-w: 100px; --tile-h: 120px; }
+  .menu { gap: 6px; flex-wrap: nowrap; max-width: 94vw; justify-content: center; }
   .menu button { padding:5px 8px; font-size: 11px; }
+  .googleBtn { width: 100%; justify-content: center; }
   .hud { font-size: 12px; }
 }
 
 @media (max-width: 360px) {
   :root { --tile-w: 92px; --tile-h: 110px; }
+  .menu { bottom: 12px; gap: 4px; flex-wrap: nowrap; max-width: 96vw; justify-content: center; }
   .menu button { padding:4px 6px; font-size: 11px; }
 }

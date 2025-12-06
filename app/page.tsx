@@ -27,7 +27,10 @@ export default function Page() {
     const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 1, 10000)
     {
       const base = Math.min(window.innerWidth, window.innerHeight)
-      camera.position.z = Math.max(2400, Math.min(3600, base * 4))
+      const mobile = window.innerWidth <= 768
+      camera.position.z = mobile
+        ? Math.max(2000, Math.min(2800, base * 3.2))
+        : Math.max(2400, Math.min(3600, base * 4))
     }
     const scene = new THREE.Scene()
     const renderer = new CSS3DRenderer()
@@ -41,7 +44,10 @@ export default function Page() {
       camera.updateProjectionMatrix()
       renderer.setSize(window.innerWidth, window.innerHeight)
       const base = Math.min(window.innerWidth, window.innerHeight)
-      camera.position.z = Math.max(2400, Math.min(3600, base * 4))
+      const mobileCam = window.innerWidth <= 768
+      camera.position.z = mobileCam
+        ? Math.max(2000, Math.min(2800, base * 3.2))
+        : Math.max(2400, Math.min(3600, base * 4))
       const s = stateRef.current!
       let tileW = cssPxVar('--tile-w'), tileH = cssPxVar('--tile-h')
       if (!tileW || !tileH) { tileW = 140; tileH = 160 }
@@ -58,7 +64,9 @@ export default function Page() {
         const phi = Math.acos(-1 + (2 * i) / total)
         const theta = Math.sqrt(total * Math.PI) * phi
         const desktop = window.innerWidth >= 1024
-        const r = desktop ? Math.min(1000, viewportMin * 0.95) : Math.max(420, Math.min(900, viewportMin * 0.7))
+        const r = desktop
+          ? Math.min(1000, viewportMin * 0.95)
+          : Math.max(260, Math.min(640, viewportMin * 0.6))
         const sObj = new THREE.Object3D()
         sObj.position.set(
           r * Math.cos(theta) * Math.sin(phi),
@@ -68,7 +76,8 @@ export default function Page() {
         sObj.lookAt(new THREE.Vector3(0,0,0))
         s.targets.sphere.push(sObj)
 
-        const helixRadius = Math.max(420, Math.min(650, viewportMin * 0.6))
+        const mobile = window.innerWidth <= 768
+        const helixRadius = mobile ? Math.max(220, Math.min(340, viewportMin * 0.45)) : Math.max(420, Math.min(650, viewportMin * 0.6))
         const helixTurns = 8
         const tFactor = i / total
         const angle = tFactor * Math.PI * 2 * helixTurns
@@ -86,7 +95,7 @@ export default function Page() {
         const iz = Math.floor(i / (gx * gy)) % gz
         const spacingX = tileW + 40
         const spacingY = tileH + 40
-        const spacingZ = 420
+        const spacingZ = mobile ? 260 : 420
         const gridObj = new THREE.Object3D()
         gridObj.position.set(
           (ix - (gx - 1) / 2) * spacingX,
@@ -275,7 +284,9 @@ export default function Page() {
       const phi = Math.acos(-1 + (2 * i) / total)
       const theta = Math.sqrt(total * Math.PI) * phi
       const desktop = window.innerWidth >= 1024
-      const r = desktop ? Math.min(1000, viewportMin * 0.95) : Math.max(420, Math.min(900, viewportMin * 0.7))
+      const r = desktop
+        ? Math.min(1000, viewportMin * 0.95)
+        : Math.max(260, Math.min(640, viewportMin * 0.6))
       const sObj = new THREE.Object3D()
       sObj.position.set(
         r * Math.cos(theta) * Math.sin(phi),
@@ -285,7 +296,8 @@ export default function Page() {
       sObj.lookAt(new THREE.Vector3(0,0,0))
       s.targets.sphere.push(sObj)
 
-      const helixRadius = Math.max(420, Math.min(650, viewportMin * 0.6))
+      const mobile = window.innerWidth <= 768
+      const helixRadius = mobile ? Math.max(220, Math.min(340, viewportMin * 0.45)) : Math.max(420, Math.min(650, viewportMin * 0.6))
       const helixTurns = 8
       const tFactor = i / total
       const angle = tFactor * Math.PI * 2 * helixTurns
@@ -303,7 +315,7 @@ export default function Page() {
       const iz = Math.floor(i / (gx * gy)) % gz
       const spacingX = tileW + 40
       const spacingY = tileH + 40
-      const spacingZ = 420
+      const spacingZ = mobile ? 260 : 420
       const gridObj = new THREE.Object3D()
       gridObj.position.set(
         (ix - (gx - 1) / 2) * spacingX,
